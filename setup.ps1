@@ -46,6 +46,13 @@ $vsExtensionsList | Where-Object -Filter {-not $vsExtensionsListActual.Contains(
     code --install-extension $_
 }
 
+#Backup FIlezilla Configs
+$fzBackupPath = "C:\Users\{0}\AppData\Local\Temp\czExport\" -f $userName;
+Copy-Item -Path "C:\Users\JonatanRek\AppData\Roaming\FileZilla\filezilla.xml" -Destination $fzBackupPath
+Copy-Item -Path "C:\Users\JonatanRek\AppData\Roaming\FileZilla\layout.xml" -Destination $fzBackupPath
+
+
+
 function New-RegFolder {
     [CmdletBinding()]
     param (
