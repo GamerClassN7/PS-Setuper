@@ -20,17 +20,17 @@ if (-not [System.IO.File]::Exists($wingetBackupPath)){
     winget export -o "$wingetBackupPath" >> $null
 }
 
-$wingetAppList = Get-Content $wingetBackupPath | ConvertFrom-Json
-$wingetAppList.Sources.Packages | ForEach-Object {
-    #TODO: Speed Up Iteration
-    winget list $_.PackageIdentifier >> $exist
-    if ($exist -eq "No installed package found matching input criteria."){
-        write-host $_.PackageIdentifier
-        winget install --id="$_.PackageIdentifier"
-        return;
-    }
-    write-host ("Already installed '{0}'" -f $_.PackageIdentifier)
-}
+# $wingetAppList = Get-Content $wingetBackupPath | ConvertFrom-Json
+# $wingetAppList.Sources.Packages | ForEach-Object {
+#     #TODO: Speed Up Iteration
+#     winget list $_.PackageIdentifier >> $exist
+#     if ($exist -eq "No installed package found matching input criteria."){
+#         write-host $_.PackageIdentifier
+#         winget install --id="$_.PackageIdentifier"
+#         return;
+#     }
+#     write-host ("Already installed '{0}'" -f $_.PackageIdentifier)
+# }
 
 #VsCode
 $vsBackupPath = "C:\Users\{0}\AppData\Local\Temp\vsExport.json" -f $userName;
@@ -47,9 +47,12 @@ $vsExtensionsList | Where-Object -Filter {-not $vsExtensionsListActual.Contains(
 }
 
 #Backup FIlezilla Configs
-$fzBackupPath = "C:\Users\{0}\AppData\Local\Temp\czExport\" -f $userName;
-Copy-Item -Path "C:\Users\JonatanRek\AppData\Roaming\FileZilla\filezilla.xml" -Destination $fzBackupPath
-Copy-Item -Path "C:\Users\JonatanRek\AppData\Roaming\FileZilla\layout.xml" -Destination $fzBackupPath
+$fzBackupPath = "C:\Users\{0}\AppData\Local\Temp\fzExport\" -f $userName;
+New-Item -Path ("C:\Users\{0}\AppData\Local\Temp\" -f $userName) -Name "fzExport" -ItemType "directory"
+Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\filezilla.xml" -Destination $fzBackupPath
+Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\layout.xml" -Destination $fzBackupPath
+Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\sitemanager.xml" -Destination $fzBackupPath
+
 
 
 
