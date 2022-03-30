@@ -1,8 +1,11 @@
 # Personal Setup Scripts for new Computers
 
 ## Tasks
-1. Backup/Recovery of instalet Apps wia WinGet
-2. (Win11) - Start to Left
-2. (Win11) - Old Cpntext Menu Back 
-4. Create new separet partition for data
-5. Disable onedrive (Optional)
+1. Backup/Recovery of installed Apps wia WinGet
+2. Create new separate partition for data
+3. (Win10) - Disable OneDrive (Optional)
+4. (Win11) - Start to Left
+5. (Win11) - Old context Menu Back 
+
+## Feature Plans
+* https://techwiser.com/windows-registry-hacks/
