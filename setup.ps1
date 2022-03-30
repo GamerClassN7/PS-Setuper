@@ -1,13 +1,13 @@
 
 
-# # #Administrator Permission Level Check
-# # $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-# # if (-not ($isAdministrator)) {
-# #     Write-Warning "Script need to be run as administrator !!!"
-# #     return
-# # }
+#Administrator Permission Level Check
+$isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+if (-not ($isAdministrator)) {
+    Write-Warning "Script need to be run as administrator !!!"
+    return
+}
 
-# # #Get Enviroment Variables
+#Get Enviroment Variables
 $osName = (Get-ComputerInfo -Property OsName).OsName;
 $userName = $env:UserName;
 
