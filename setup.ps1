@@ -1,9 +1,13 @@
-$osName = (Get-ComputerInfo -Property OsName).OsName
-if (-not [System.IO.File]::Exists("C:\Users\JonatanRek\AppData\Local\Temp\wgExport.json")){
-    winget export -o "C:\Users\JonatanRek\AppData\Local\Temp\wgExport.json" >> $null
+$osName = (Get-ComputerInfo -Property OsName).OsName;
+$userName = $env:UserName;
+write-host ("Hello '{0}'" -f $userName)
+
+$wingetBackupPath = "C:\Users\{0}\AppData\Local\Temp\wgExport.json" -f $userName;
+if (-not [System.IO.File]::Exists($wingetBackupPath)){
+    winget export -o "$wingetBackupPath" >> $null
 }
 
-$wingetAppList = Get-Content "C:\Users\JonatanRek\AppData\Local\Temp\wgExport.json" | ConvertFrom-Json
+$wingetAppList = Get-Content $wingetBackupPath | ConvertFrom-Json
 $wingetAppList.Sources.Packages | ForEach-Object {
     winget list $_.PackageIdentifier >> $exist
     if ($exist -eq "No installed package found matching input criteria."){
@@ -34,3 +38,7 @@ if ($osName.startsWith("Microsoft Windows 11")){
 # if ($freeDiskSpaceGb -gt 10){
 #     New-Partition -DiskNumber 0 -Size 10GB -DriveLetter V | Format-Volume -FileSystem NTFS -NewFileSystemLabel "WORK 2"
 # } 
+
+
+#Add local Admin Creation
+# Add disable of Administraor Default
