@@ -54,8 +54,6 @@ Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\layout.xml" -Destinatio
 Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\sitemanager.xml" -Destination $fzBackupPath
 
 
-
-
 function New-RegFolder {
     [CmdletBinding()]
     param (
