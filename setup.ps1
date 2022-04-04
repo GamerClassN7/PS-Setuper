@@ -4,7 +4,7 @@
 $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if (-not ($isAdministrator)) {
     Write-Warning "Script need to be run as administrator !!!"
-    return
+   # return
 }
 
 #Get Enviroment Variables
@@ -49,10 +49,14 @@ $vsExtensionsList | Where-Object -Filter {-not $vsExtensionsListActual.Contains(
 #Backup FIlezilla Configs
 $fzBackupPath = "C:\Users\{0}\AppData\Local\Temp\fzExport\" -f $userName;
 New-Item -Path ("C:\Users\{0}\AppData\Local\Temp\" -f $userName) -Name "fzExport" -ItemType "directory"
-Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\filezilla.xml" -Destination $fzBackupPath
-Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\layout.xml" -Destination $fzBackupPath
-Copy-Item "C:\Users\JonatanRek\AppData\Roaming\FileZilla\sitemanager.xml" -Destination $fzBackupPath
+Copy-Item ("C:\Users\{0}\AppData\Roaming\FileZilla\filezilla.xml" -f $userName) -Destination $fzBackupPath
+Copy-Item ("C:\Users\{0}\AppData\Roaming\FileZilla\layout.xml" -f $userName) -Destination $fzBackupPath
+Copy-Item ("C:\Users\{0}\AppData\Roaming\FileZilla\sitemanager.xml" -f $userName) -Destination $fzBackupPath
 
+#Backup Tabby Configs
+$tbBackupPath = "C:\Users\{0}\AppData\Local\Temp\tbExport\" -f $userName;
+New-Item -Path ("C:\Users\{0}\AppData\Local\Temp\" -f $userName) -Name "tbExport" -ItemType "directory"
+Copy-Item ("C:\Users\{0}\AppData\Roaming\tabby\config.yaml" -f $userName) -Destination $tbBackupPath
 
 function New-RegFolder {
     [CmdletBinding()]
