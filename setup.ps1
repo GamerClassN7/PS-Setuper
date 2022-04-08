@@ -4,7 +4,7 @@
 $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if (-not ($isAdministrator)) {
     Write-Warning "Script need to be run as administrator !!!"
-   # return
+    # return
 }
 
 #Get Enviroment Variables
@@ -13,35 +13,47 @@ $userName = $env:UserName;
 
 #Menu & Intro
 write-host ("Hello '{0}'" -f $userName)
+write-host ("OS '{0}'" -f $osName)
+
 
 #WinGet
+$hasPackageManager = Get-AppPackage -name "Microsoft.DesktopAppInstaller"
+if (!$hasPackageManager) {
+    $releases_url = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $releases = Invoke-RestMethod -uri "$($releases_url)"
+    $latestRelease = $releases.assets | Where-Object { $_.browser_download_url.EndsWith("msixbundle") } | Select-Object -First 1
+    Add-AppxPackage -Path $latestRelease.browser_download_url
+}
+write-host ("Winget Installed")
+    
 $wingetBackupPath = "C:\Users\{0}\AppData\Local\Temp\wgExport.json" -f $userName;
-if (-not [System.IO.File]::Exists($wingetBackupPath)){
+if (-not [System.IO.File]::Exists($wingetBackupPath)) {
     winget export -o "$wingetBackupPath" >> $null
 }
 
-# $wingetAppList = Get-Content $wingetBackupPath | ConvertFrom-Json
-# $wingetAppList.Sources.Packages | ForEach-Object {
-#     #TODO: Speed Up Iteration
-#     winget list $_.PackageIdentifier >> $exist
-#     if ($exist -eq "No installed package found matching input criteria."){
-#         write-host $_.PackageIdentifier
-#         winget install --id="$_.PackageIdentifier"
-#         return;
-#     }
-#     write-host ("Already installed '{0}'" -f $_.PackageIdentifier)
-# }
+$wingetAppList = Get-Content $wingetBackupPath | ConvertFrom-Json
+$wingetAppList.Sources.Packages | ForEach-Object {
+    #TODO: Speed Up Iteration
+    $exist = (winget list $_.PackageIdentifier).Trim()
+    if ($exist -eq "No installed package found matching input criteria.") {
+        write-host $_.PackageIdentifier
+        winget install --id $_.PackageIdentifier
+        return;
+    }
+    write-host ("Already installed '{0}'" -f $_.PackageIdentifier)
+}
 
 #VsCode
 $vsBackupPath = "C:\Users\{0}\AppData\Local\Temp\vsExport.json" -f $userName;
-if (-not [System.IO.File]::Exists($vsBackupPath)){
+if (-not [System.IO.File]::Exists($vsBackupPath)) {
     $commandOutput = & code --list-extensions
     $commandOutput.Split([Environment]::NewLine) | ConvertTo-Json | Out-File -Encoding utf8 -FilePath $vsBackupPath
 }
 
 $vsExtensionsList = Get-Content $vsBackupPath | ConvertFrom-Json
 $vsExtensionsListActual = & code --list-extensions
-$vsExtensionsList | Where-Object -Filter {-not $vsExtensionsListActual.Contains($_)} | ForEach-Object {
+$vsExtensionsList | Where-Object -Filter { -not $vsExtensionsListActual.Contains($_) } | ForEach-Object {
     write-host $_
     code --install-extension $_
 }
@@ -57,6 +69,11 @@ Copy-Item ("C:\Users\{0}\AppData\Roaming\FileZilla\sitemanager.xml" -f $userName
 $tbBackupPath = "C:\Users\{0}\AppData\Local\Temp\tbExport\" -f $userName;
 New-Item -Path ("C:\Users\{0}\AppData\Local\Temp\" -f $userName) -Name "tbExport" -ItemType "directory"
 Copy-Item ("C:\Users\{0}\AppData\Roaming\tabby\config.yaml" -f $userName) -Destination $tbBackupPath
+
+#Backup KeeWeb Configs
+$tbBackupPath = "C:\Users\{0}\AppData\Roaming\KeeWeb\" -f $userName;
+New-Item -Path ("C:\Users\{0}\AppData\Local\Temp\" -f $userName) -Name "kwExport" -ItemType "directory"
+Copy-Item ("C:\Users\{0}\AppData\Roaming\KeeWeb\app-settings.dat" -f $userName) -Destination $tbBackupPath
 
 function New-RegFolder {
     [CmdletBinding()]
@@ -79,12 +96,13 @@ function New-RegFolder {
             Name = $FolderName
         }
 
-        if ($DefaultValue -ne $null){
+        if ($DefaultValue -ne $null) {
             $newKey["Value"] = $DefaultValue
         }
 
         New-Item @newKey
-    } else {
+    }
+    else {
         Write-Host "exist" + $FolderPath + $FolderName
     }
 }
@@ -109,17 +127,58 @@ function New-RegItem {
     $regItemExist = (((Get-ItemProperty -Path ("{0}" -f $ItemPath) -ErrorAction SilentlyContinue).PSObject.Properties | Where-Object -Filter { $_.Name -eq $ItemName } | Measure-Object).Count -gt 0)
     if (-not $regItemExist) {
         $newItem = @{
-            Path = $ItemPath
-            Name = $ItemName
+            Path  = $ItemPath
+            Name  = $ItemName
             Value = $ItemValue
-            Type = $ItemType
+            Type  = $ItemType
         }
 
         New-ItemProperty @newItem
-    } else {
+    }
+    else {
         Write-Host "exist" + $ItemPath + "[" + $ItemType + "]"+ $ItemName + ":" + $ItemValue
     }
 }
+
+function Set-RegItem {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $ItemName,
+        [Parameter()]
+        [string]
+        $ItemPath,
+        [Parameter()]
+        [string]
+        $ItemValue,
+        [Parameter()]
+        [string]
+        $ItemType = "DWORD"
+    )
+
+    $newItem = @{
+        Path  = $ItemPath
+        Name  = $ItemName
+        Value = $ItemValue
+        Type  = $ItemType
+    }
+
+    Set-ItemProperty @newItem
+}
+
+#OS Common
+if ($osName.startsWith("Microsoft Windows 10") -or $osName.startsWith("Microsoft Windows 11")) {
+    #Dark-Mode
+    Set-RegItem -ItemPath "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -ItemName "AppsUseLightTheme" -ItemType "DWORD" -ItemValue 0
+    Set-RegItem -ItemPath "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -ItemName "ColorPrevalence" -ItemType "DWORD" -ItemValue 0
+    
+    #File Extensions
+    Set-RegItem -ItemPath "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -ItemName "HideFileExt" -ItemType "DWORD" -ItemValue 0
+
+    #Visueal Efects
+    Set-RegItem -ItemPath "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -ItemName "VisualFXSetting" -ItemType "DWORD" -ItemValue 4
+
 
 #OS Specific Tasks
 if ($osName.startsWith("Microsoft Windows 10")) {
